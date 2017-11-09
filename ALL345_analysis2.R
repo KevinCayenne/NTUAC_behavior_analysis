@@ -2,14 +2,14 @@ setwd("D:/Data/Research_projeccts/NTUACdata/NTUAC_Analysis")
 NTUAC2.all <- read.csv('ALL_3_4_5±èV2.csv')
 
 NTUAC2.data <- data.frame(NTUAC2.all)
-NTUAC2.data.FThree <- NTUAC2.data[complete.cases(NTUAC2.data.FThree),]
-NTUAC2.data.FThree <- NTUAC2.data.FThree[NTUAC2.data.FThree$Fir3==1,]
 
 NTUAC2.data$Session <- as.factor(NTUAC2.data$Session)
 NTUAC2.data$Task <- as.factor(NTUAC2.data$Task)
 NTUAC2.data$Subject <- as.factor(NTUAC2.data$Subject)
-NTUAC2.data$Tag <- as.factor(NTUAC2.data$Tag)
+# NTUAC2.data$Tag <- as.factor(NTUAC2.data$Tag)
 
+NTUAC2.data.FThree <- NTUAC2.data[complete.cases(NTUAC2.data),]
+NTUAC2.data.FThree <- NTUAC2.data.FThree[NTUAC2.data.FThree$Fir3==1,]
 Df.NB <- subset(NTUAC2.data, Task=="NB") 
 Df.I <- subset(NTUAC2.data, Task=="I") 
 Df.S <- subset(NTUAC2.data, Task=="S")
@@ -18,21 +18,44 @@ library(ggplot2)
 library(ggsignif)
 library(plotly)
 
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+  return(data_sum)
+}
+
+NTUAC2.data.FThree[,8] <- sequence(rle(NTUAC2.data.FThree$Tag)$length)
+
 # Boxplot
 boxplot(NTUAC2.data$ACC ~ NTUAC2.data$Subject)
 boxplot(NTUAC2.data$ACC ~ NTUAC2.data$Task )
 boxplot(NTUAC2.data$ACC ~ NTUAC2.data$Task * NTUAC2.data$Subject)
 
 boxplot(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA + NTUAC2.data.FThree$Tag)
+plot(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA + NTUAC2.data.FThree$Tag)
 
-tapply(NTUAC2.data$ACC, list(NTUAC2.data$DIA, NTUAC2.data$Tag), mean, na.rm="TRUE")
+tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$DIA, NTUAC2.data.FThree$Task), mean, na.rm="TRUE")
 tapply(NTUAC2.data$ACC, list(NTUAC2.data$DIA, NTUAC2.data$Tag, NTUAC2.data$Task), mean, na.rm="TRUE")
 
-tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$Task, NTUAC2.data.FThree$DIA, NTUAC2.data.FThree$Tag, NTUAC2.data.FThree$Subject), mean, na.rm="TRUE")
+tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$Task, NTUAC2.data.FThree$DIA, NTUAC2.data.FThree$Tag), mean, na.rm="TRUE")
+tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$Subject, NTUAC2.data.FThree$DIA), mean, na.rm="TRUE")
+tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$Subject, NTUAC2.data.FThree$DIA), sd, na.rm="TRUE")
+
+## linear model
 K <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$Subject * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
 summary(K)
 
+M <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
+summary(M)
 
+R <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Task * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$times)
+summary(R)
 
 # ggplot line
 
@@ -147,3 +170,10 @@ TaskACC.Subject <- ggplot(NTUAC2.data, aes(Task, ACC)) +
                             axis.title = element_text(size=20,face="bold"))
 print(TaskACC.Subject)
 dev.off()
+
+
+ggplot(NTUAC2.data.FThree, aes(x=Tag, y=ACC, group=DIA, color=DIA)) + 
+        geom_line() + 
+        geom_errorbar(aes(ymin=ACC-sd, ymax=ACC+sd), width=.1) +
+        theme_classic() +
+        scale_color_manual(values=c('#999999','#E69F00'))
