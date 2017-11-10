@@ -6,7 +6,6 @@ NTUAC2.data <- data.frame(NTUAC2.all)
 NTUAC2.data$Session <- as.factor(NTUAC2.data$Session)
 NTUAC2.data$Task <- as.factor(NTUAC2.data$Task)
 NTUAC2.data$Subject <- as.factor(NTUAC2.data$Subject)
-NTUAC2.data$Tag <- as.factor(NTUAC2.data$Tag)
 
 NTUAC2.data.FThree <- NTUAC2.data[complete.cases(NTUAC2.data),]
 NTUAC2.data.FThree <- NTUAC2.data.FThree[NTUAC2.data.FThree$Fir3==1,]
@@ -21,6 +20,11 @@ library(ggpubr)
 
 NTUAC2.data.FThree[,8] <- sequence(rle(NTUAC2.data.FThree$Tag)$length)
 NTUAC2.data.FThree[,8]
+
+colnames(NTUAC2.data.FThree)[8] <- "times"
+NTUAC2.data.FThree$Tag <- as.factor(NTUAC2.data.FThree$Tag)
+NTUAC2.data.FThree$times <- as.factor(NTUAC2.data.FThree$times)
+NTUAC2.data.FThree$Session <- as.factor(NTUAC2.data.FThree$Session)
 
 # Boxplot
 boxplot(NTUAC2.data$ACC ~ NTUAC2.data$Subject)
@@ -47,7 +51,8 @@ summary(M)
 R <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
 summary(R)
 
-# ggplot line
+O <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$times)
+summary(O)# ggplot line
 
 png(sprintf("The accuracy of each subjects_Nback task.png"), width = 1800, height = 700)
 NB.sub <- ggplot(na.omit(Df.NB), aes(x=Session, y=ACC, group=interaction(Subject, Task), colour = Subject)) +
@@ -181,10 +186,17 @@ ggplot(try.1, aes(x=Level, y=tmean, group=Diagnose, color=Diagnose)) +
         theme(plot.title = element_text(hjust = 0.5, size= 15)) + 
         stat_compare_means(aes(group = Diagnose), label = "p.signif", label.y = 1.1) 
 
-ggline(NTUAC2.data.FThree, x = "Tag", y = "ACC", add = "mean_se",
+ggline(NTUAC2.data.FThree, x = "Tag", y = "ACC", add = "mean_sd",
        color = "DIA", palette = "jco") +
        stat_compare_means(aes(group = DIA), label = "p.signif", 
                           label.y = 1.1) +
        labs(title = "Group difference in each levels", x = "Difficulty levels", y = "Accuracy", fill = "DIAGNOSE") +
        theme(plot.title = element_text(hjust = 0.5, size= 15))
+
+ggline(NTUAC2.data.FThree, x = "times", y = "ACC", add = "mean_se",
+       color = "DIA", palette = "jco") +
+  stat_compare_means(aes(group = DIA), label = "p.signif", 
+                     label.y = 1) +
+  labs(title = "Group difference in each levels", x = "Difficulty levels", y = "Accuracy", fill = "DIAGNOSE") +
+  theme(plot.title = element_text(hjust = 0.5, size= 15))
         
