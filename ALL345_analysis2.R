@@ -6,7 +6,7 @@ NTUAC2.data <- data.frame(NTUAC2.all)
 NTUAC2.data$Session <- as.factor(NTUAC2.data$Session)
 NTUAC2.data$Task <- as.factor(NTUAC2.data$Task)
 NTUAC2.data$Subject <- as.factor(NTUAC2.data$Subject)
-# NTUAC2.data$Tag <- as.factor(NTUAC2.data$Tag)
+NTUAC2.data$Tag <- as.factor(NTUAC2.data$Tag)
 
 NTUAC2.data.FThree <- NTUAC2.data[complete.cases(NTUAC2.data),]
 NTUAC2.data.FThree <- NTUAC2.data.FThree[NTUAC2.data.FThree$Fir3==1,]
@@ -17,20 +17,10 @@ Df.S <- subset(NTUAC2.data, Task=="S")
 library(ggplot2)
 library(ggsignif)
 library(plotly)
-
-data_summary <- function(data, varname, groupnames){
-  require(plyr)
-  summary_func <- function(x, col){
-    c(mean = mean(x[[col]], na.rm=TRUE),
-      sd = sd(x[[col]], na.rm=TRUE))
-  }
-  data_sum<-ddply(data, groupnames, .fun=summary_func,
-                  varname)
-  data_sum <- rename(data_sum, c("mean" = varname))
-  return(data_sum)
-}
+library(ggpubr)
 
 NTUAC2.data.FThree[,8] <- sequence(rle(NTUAC2.data.FThree$Tag)$length)
+NTUAC2.data.FThree[,8]
 
 # Boxplot
 boxplot(NTUAC2.data$ACC ~ NTUAC2.data$Subject)
@@ -54,7 +44,7 @@ summary(K)
 M <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
 summary(M)
 
-R <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Task * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$times)
+R <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
 summary(R)
 
 # ggplot line
@@ -171,9 +161,30 @@ TaskACC.Subject <- ggplot(NTUAC2.data, aes(Task, ACC)) +
 print(TaskACC.Subject)
 dev.off()
 
+tmean <- tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$DIA, NTUAC2.data.FThree$Tag), mean, na.rm="TRUE")
+tmean <- c(tmean[1,],tmean[2,])
+tsd <- tapply(NTUAC2.data.FThree$ACC, list(NTUAC2.data.FThree$DIA, NTUAC2.data.FThree$Tag), sd, na.rm="TRUE")
+tsd <- c(tsd[1,],tsd[2,])
+Diagnose <- rep(c("MCI","SCD"),c(6,6))
+Level <- rep(1:6,2)
 
-ggplot(NTUAC2.data.FThree, aes(x=Tag, y=ACC, group=DIA, color=DIA)) + 
-        geom_line() + 
-        geom_errorbar(aes(ymin=ACC-sd, ymax=ACC+sd), width=.1) +
+try.1 <- data.frame(tmean, tsd, Diagnose, Level)
+try.1
+
+ggplot(try.1, aes(x=Level, y=tmean, group=Diagnose, color=Diagnose)) + 
+        geom_line() +
+        geom_point() +
+        geom_errorbar(aes(ymin=tmean-tsd, ymax=tmean+tsd), width=.2, position=position_dodge(0.05)) +
         theme_classic() +
-        scale_color_manual(values=c('#999999','#E69F00'))
+        scale_color_manual(values=c('#999999','#E69F00')) +
+        labs(title = "Group difference in each levels", x = "Difficulty levels", y = "Accuracy", fill = "DIAGNOSE") +
+        theme(plot.title = element_text(hjust = 0.5, size= 15)) + 
+        stat_compare_means(aes(group = Diagnose), label = "p.signif", label.y = 1.1) 
+
+ggline(NTUAC2.data.FThree, x = "Tag", y = "ACC", add = "mean_se",
+       color = "DIA", palette = "jco") +
+       stat_compare_means(aes(group = DIA), label = "p.signif", 
+                          label.y = 1.1) +
+       labs(title = "Group difference in each levels", x = "Difficulty levels", y = "Accuracy", fill = "DIAGNOSE") +
+       theme(plot.title = element_text(hjust = 0.5, size= 15))
+        
