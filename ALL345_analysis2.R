@@ -1,38 +1,38 @@
 setwd("D:/Data/Research_projeccts/NTUACdata/NTUAC_Analysis")
 NTUAC2.all <- read.csv('ALL_3_4_5±èV2.csv')
 
+library(ggplot2)
+library(ggsignif)
+library(wesanderson)
+library(ggpubr)
+
 NTUAC2.data <- data.frame(NTUAC2.all)
 
 NTUAC2.data$Session <- as.factor(NTUAC2.data$Session)
 NTUAC2.data$Task <- as.factor(NTUAC2.data$Task)
+NTUAC2.data$DIA_N <- as.factor(NTUAC2.data$DIA_N)
 
 NTUAC2.data.FThreeA <- NTUAC2.data[complete.cases(NTUAC2.data),]
-NTUAC2.data.FThreeA$Tag <- as.factor(NTUAC2.data.FThreeA$Tag)
 NTUAC2.data.FThree <- NTUAC2.data.FThreeA[NTUAC2.data.FThreeA$Fir3==1,]
 Df.NB <- subset(NTUAC2.data, Task=="NB") 
 Df.I <- subset(NTUAC2.data, Task=="I") 
 Df.S <- subset(NTUAC2.data, Task=="S")
 
-library(ggplot2)
-library(ggsignif)
-library(plotly)
-library(ggpubr)
-
-NTUAC2.data.FThree[,8] <- sequence(rle(NTUAC2.data.FThree$Tag)$length)
-NTUAC2.data.FThree[,8]
+NTUAC2.data.FThree[,9] <- sequence(rle(NTUAC2.data.FThree$Tag)$length)
+NTUAC2.data.FThree[,9]
 NTUAC2.data$Subject <- as.factor(NTUAC2.data$Subject)
-colnames(NTUAC2.data.FThree)[8] <- "times"
+colnames(NTUAC2.data.FThree)[9] <- "times"
 NTUAC2.data.FThree$Tag <- as.factor(NTUAC2.data.FThree$Tag)
 NTUAC2.data.FThree$times <- as.factor(NTUAC2.data.FThree$times)
 NTUAC2.data.FThree$Session <- as.factor(NTUAC2.data.FThree$Session)
 
-t1 <- table(NTUAC2.data.FThreeA$Tag, NTUAC2.data.FThreeA$Task, NTUAC2.data.FThreeA$DIA)
+t1 <- table(NTUAC2.data.FThreeA$Tag, NTUAC2.data.FThreeA$Task, NTUAC2.data.FThreeA$DIA_N)
 t1 <- as.data.frame(t1)
 t1[t1$Var3=="MCI",]$Freq <- (t1[t1$Var3=="MCI",]$Freq/5)
 t1[t1$Var3=="SCD",]$Freq <- (t1[t1$Var3=="SCD",]$Freq/14)
 colnames(t1)[1:3] <- c("session","task","group")
 
-table1 <- table(NTUAC2.data.FThreeA$Subject, NTUAC2.data.FThreeA$Tag, NTUAC2.data.FThreeA$Task, NTUAC2.data.FThreeA$DIA)
+table1 <- table(NTUAC2.data.FThreeA$Subject, NTUAC2.data.FThreeA$Tag,  NTUAC2.data.FThreeA$Task, NTUAC2.data.FThreeA$DIA_N)
 table1 <- as.data.frame(table1)
 colnames(table1)[1:4] <- c("ID","session","task","group")
 
@@ -61,8 +61,10 @@ summary(M)
 R <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$Task)
 summary(R)
 
-O <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$times)
-summary(O)# ggplot line
+O <- lm(NTUAC2.data.FThree$ACC ~ NTUAC2.data.FThree$DIA_N * NTUAC2.data.FThree$Tag * NTUAC2.data.FThree$times)
+summary(O)
+
+# ggplot line
 
 png(sprintf("The accuracy of each subjects_Nback task.png"), width = 1800, height = 700)
 NB.sub <- ggplot(na.omit(Df.NB), aes(x=Session, y=ACC, group=interaction(Subject, Task), colour = Subject)) +
@@ -196,26 +198,31 @@ ggplot(try.1, aes(x=Level, y=tmean, group=Diagnose, color=Diagnose)) +
         theme(plot.title = element_text(hjust = 0.5, size= 15)) + 
         stat_compare_means(aes(group = Diagnose), label = "p.signif", label.y = 1.1) 
 
-ggline(NTUAC2.data.FThree, x = "Tag", y = "ACC", add = "mean_sd",
-       color = "DIA", palette = "jco") +
-       stat_compare_means(aes(group = DIA), label = "p.signif", 
+ggline(NTUAC2.data.FThree, x = "Tag", y = "ACC", add = "mean_se",
+       color = "DIA_N", palette = "jco") +
+       stat_compare_means(aes(group = DIA_N), label = "p.signif", 
                           label.y = 1.1) +
        labs(title = "Group difference in each levels", x = "Difficulty levels", y = "Accuracy", fill = "DIAGNOSE") +
        theme(plot.title = element_text(hjust = 0.5, size= 15))
 
-ggline(NTUAC2.data.FThree, x = "times", y = "ACC", add = "mean_se",
-       color = "DIA", palette = "jco") +
-  stat_compare_means(aes(group = DIA), label = "p.signif", 
-                     label.y = .95) +
+TimeT <- ggline(NTUAC2.data.FThree, x = "times", y = "ACC", add = "mean_se",
+       color = "DIA_N", palette = "jco", facet.by = "Tag") +
+  stat_compare_means(aes(group = DIA_N), label = "p.signif", 
+                     label.y = 1) +
   labs(title = "Group difference in first 3 sessions of each level", x = "Session", y = "Accuracy", fill = "DIAGNOSE") +
-  theme(plot.title = element_text(hjust = 0.5, size= 15))
+  theme(plot.title = element_text(hjust = 0.5, size= 15)) 
         
-ggline(NTUAC2.data.FThree, x = "Task", y = "ACC", add = "mean_se",
-       color = "DIA", palette = "jco") +
-  stat_compare_means(aes(group = DIA), label = "p.signif", 
+TaskT <- ggline(NTUAC2.data.FThree, x = "Task", y = "ACC", add = "mean_se",
+       color = "DIA_N", palette = "jco") +
+  stat_compare_means(aes(group = DIA_N), label = "p.signif", 
                      label.y = 1) +
   labs(title = "Group difference in each task", x = "Task", y = "Accuracy", fill = "DIAGNOSE") +
-  theme(plot.title = element_text(hjust = 0.5, size= 15))
+  theme(plot.title = element_text(hjust = 0.5, size= 15)) +
+  ylim(c(0.83,1))
+
+ggarrange(TimeT, TaskT, 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
 
 ###
 
@@ -226,15 +233,13 @@ tNB <- t1[t1$task=="NB",]
 tryT <- table1[!(table1$Freq=="0"),]
 tryT <- tryT[!(tryT$session=="6"),]
 
-
 TotalP <- ggline(tryT, x = "session", y = "Freq", add = c("mean_se", "jitter"),
              color = "group", palette = "jco", facet.by = "task") +
   labs(title = "Group difference for mean no. by tasks", x = "Levels", y = "Times", fill = "DIAGNOSE") +
   stat_compare_means(aes(group = group), label = "p.signif", 
-                    label.y = 12) +
+                   label.y = 12) +
   theme(plot.title = element_text(hjust = 0.5, size= 15)) +
   ylim(c(0,12))
-
 
 tbI <- tryT[tryT$task=="I",]
 tbS <- tryT[tryT$task=="S",]
