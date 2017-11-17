@@ -43,9 +43,11 @@ for (Gname in groupName){
     GroupACC <- NTUAC2.data.FThree[NTUAC2.data.FThree$Tag==i&NTUAC2.data.FThree$DIA_N==Gname,]
     GroupACC.S <- split(GroupACC, GroupACC$Task)
     
-    do.this <- "NB"
+    do.this <- c("I","NB","S")
     
-    switch(do.this,
+    for (do in do.this){
+    
+    switch(do,
       I = {
         IR <- summary(lm(GroupACC.S$I$ACC ~ GroupACC.S$I$times))
         dataI <- as.data.frame(IR$coefficients)
@@ -62,6 +64,7 @@ for (Gname in groupName){
         BS.data <- c(BS.data, dataS$Estimate[2])
       }
     )
+    }
     }
 }
 
@@ -96,3 +99,6 @@ ggplot(data=M.slope.R, aes(x=dif.Tag, y=mean.slope))+
   geom_bar(aes(group=dif.Tag,  fill=group.Tag), stat="identity", position=position_dodge(1)) +
   facet_grid(group.Tag~Task.Tag, scale='free_x') +
   geom_smooth(aes(group=group.Tag), method="lm")
+
+m <- lm(M.slope.R$mean.slope ~ M.slope.R$Task.Tag * M.slope.R$group.Tag)
+summary(m)
