@@ -86,6 +86,10 @@ M.slope.R$group.Tag <- as.factor(M.slope.R$group.Tag)
 head(M.slope.R)
 
 ggplot(data=M.slope.R, aes(y=mean.slope))+
+  geom_bar(aes(x=group.Tag, group=dif.Tag,  fill=group.Tag), stat="identity", position=position_dodge(1)) +
+  facet_grid(~Task.Tag, scale='free_x')
+
+ggplot(data=M.slope.R, aes(y=mean.slope))+
       geom_bar(aes(x=dif.Tag, group=group.Tag,  fill=group.Tag), stat="identity", position=position_dodge(1)) +
       facet_grid(~Task.Tag, scale='free_x') +
       geom_smooth(aes(x = dif.Tag, group=group.Tag, colour=group.Tag, fill=group.Tag), method="glm", position=position_dodge(1))
