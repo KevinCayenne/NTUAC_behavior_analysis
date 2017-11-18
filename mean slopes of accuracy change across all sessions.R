@@ -6,6 +6,7 @@ library(ggsignif)
 library(wesanderson)
 library(magrittr)
 library(ggpubr)
+library(dplyr)
 
 NTUAC2.data <- data.frame(NTUAC2.all)
 
@@ -29,6 +30,8 @@ NTUAC2.data.FThree$Tag <- as.factor(NTUAC2.data.FThree$Tag)
 
 ####
 
+tapply(NTUAC2.data.FThree$Subject)
+
 B.data <- c()
 BI.data <- c()
 BNB.data <- c()
@@ -37,6 +40,54 @@ BS.data <- c()
 groupNum <- 5
 taskName <- c("I", "NB","S")
 groupName <- c("CN", "SCD", "MCI")
+
+R.data.total <- c()
+Sub.tag <- c()
+Dif.tag <- c()
+Dia.tag <- c()
+Task.tag <- c()
+u = 0
+
+GroupACC <- split(NTUAC2.data.FThree, NTUAC2.data.FThree$Subject)
+
+for (i in 1:length(GroupACC)){
+  SS <- GroupACC[[i]]
+  ST <- split(SS, SS$Task)
+  for (j in 1:length(ST)){
+      STT <- ST[[j]]
+      STTD <- split(STT, STT$Tag)
+      for (k in 1:(length(STTD)-1)){
+          STTDD <- STTD[[k]]
+          if (is.na(STTDD$Session[1])==FALSE){
+            RE <- summary(lm(STTDD$ACC ~ STTDD$times))
+            dataR <- as.data.frame(RE$coefficients)
+            R.data.total <- c(R.data.total, dataR$Estimate[2])
+            Sub.tag <- c(Sub.tag, as.character(STTDD$Subject[1]))
+            Dif.tag <- c(Dif.tag, as.character(STTDD$Tag[1]))
+            Dia.tag <- c(Dia.tag, as.character(STTDD$DIA_N[1]))
+            Task.tag <- c(Task.tag, as.character(STTDD$Task[1]))
+            u = u+1
+          }
+      }
+  }
+}
+
+col.name <- c("Task.tag", "Sub.tag", "Dif.tag", "Dia.tag")
+Total.df <- data.frame(R.data.total, Task.tag, Sub.tag, Dif.tag, Dia.tag)
+Total.df <- na.omit(Total.df)
+Total.df[col.name] <- lapply(Total.df[col.name], factor)
+
+ggline(Total.df, x = "Dif.tag", y = "R.data.total", add = "mean_se",
+       color = "Dia.tag", palette = "jco", facet.by = "Task.tag") +
+  labs(title = "Group difference in slope of accuarcy changing in each levels", x = "Difficulty levels", y = "Slope of accuracy", fill = "DIAGNOSE") +
+  theme(plot.title = element_text(hjust = 0.5, size= 15)) +
+  stat_compare_means(aes(group = Dia.tag), label = "p.signif", 
+                     label.y = 0.13)
+
+kk <- lm(Total.df$R.data.total ~ Total.df$Dia.tag * Total.df$Task.tag * Total.df$Dif.tag)
+summary(kk)
+
+#######
 
 for (Gname in groupName){
   for (i in (1:groupNum)){
@@ -93,6 +144,7 @@ ggplot(data=M.slope.R, aes(y=mean.slope))+
       geom_bar(aes(x=dif.Tag, group=group.Tag,  fill=group.Tag), stat="identity", position=position_dodge(1)) +
       facet_grid(~Task.Tag, scale='free_x') +
       geom_smooth(aes(x = dif.Tag, group=group.Tag, colour=group.Tag, fill=group.Tag), method="glm", position=position_dodge(1))
+a69111833
 
 ggline(M.slope.R, x = "dif.Tag", y = "mean.slope", add = "mean_se",
        color = "group.Tag", palette = "jco", facet.by = "Task.Tag") +
@@ -104,5 +156,5 @@ ggplot(data=M.slope.R, aes(x=dif.Tag, y=mean.slope))+
   facet_grid(group.Tag~Task.Tag, scale='free_x') +
   geom_smooth(aes(group=group.Tag), method="lm")
 
-m <- lm(M.slope.R$mean.slope ~ M.slope.R$Task.Tag * M.slope.R$group.Tag)
+m <- lm(M.slope.R$mean.slope ~ M.slope.R$Task.Tag * M.slope.R$group.Tag * M.slope.R$dif.Tag)
 summary(m)
