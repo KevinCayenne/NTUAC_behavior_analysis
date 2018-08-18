@@ -144,7 +144,6 @@ ggplot(data=M.slope.R, aes(y=mean.slope))+
       geom_bar(aes(x=dif.Tag, group=group.Tag,  fill=group.Tag), stat="identity", position=position_dodge(1)) +
       facet_grid(~Task.Tag, scale='free_x') +
       geom_smooth(aes(x = dif.Tag, group=group.Tag, colour=group.Tag, fill=group.Tag), method="glm", position=position_dodge(1))
-a69111833
 
 ggline(M.slope.R, x = "dif.Tag", y = "mean.slope", add = "mean_se",
        color = "group.Tag", palette = "jco", facet.by = "Task.Tag") +
