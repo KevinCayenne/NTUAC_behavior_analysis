@@ -82,6 +82,4 @@ NTUAC.pre$ACC <- NTUAC.pre$ACC*100
 
 domain.total.sub <- rbind(domain.total.sub, NTUAC.pre)
 
-write.csv(domain.total.sub, file = "NTUAC_total_34567.csv")
-
-
+write.csv(domain.total.sub, file = "../NTUAC_total_34567.csv")
