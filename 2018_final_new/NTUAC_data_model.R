@@ -19,6 +19,8 @@ NTUAC.final <- NTUAC.final[NTUAC.final$Level != 6,]
 NTUAC.final$Level
 str(NTUAC.final)
 
+table(NTUAC.final$Group, NTUAC.final$Subj.num)
+
 NTUAC.model <- lmer(ACC ~ Task*trainning_times_level*poly(Level, 2)*Group + (1+Level+trainning_times_level|Subj.num), data = NTUAC.final)
 NTUAC.model.summary <- summary(NTUAC.model)
 NTUAC.model.anova <- anova(NTUAC.model)
@@ -70,19 +72,19 @@ ggline(NTUAC.final.Switching, x = "Level", y = "ACC", add = "mean_se", color = "
                      label.y = 110, size = 5)
 
 
-ggline(NTUAC.final.Inhibition, x = "trainning_times_level", y = "ACC", add = "mean_se", color = "Group", facet.by = "Level") +
+ggline(NTUAC.final.Inhibition, x = "trainning_times_level", y = "ACC", add = c("mean_se","jitter"), color = "Group", facet.by = "Level") +
   labs(x = "training times", y = "ACC", colour = "Group", title = "Inhibition") + facet_wrap(~ Level, ncol=5) +
   stat_compare_means(aes(group = Group), label = "p.signif", 
                      label.y = 110, size = 5) +
   geom_smooth(method = 'lm', formula = y ~ poly(x,2), aes(colour = Group), size=1)
 
-ggline(NTUAC.final.NBack, x = "trainning_times_level", y = "ACC", add = "mean_se", color = "Group", facet.by = "Level") +
+ggline(NTUAC.final.NBack, x = "trainning_times_level", y = "ACC", add = c("mean_se","jitter"), color = "Group", facet.by = "Level") +
   labs(x = "training times", y = "ACC", colour = "Group", title = "NBack") + facet_wrap(~ Level, ncol=5) +
   stat_compare_means(aes(group = Group), label = "p.signif", 
                      label.y = 110, size = 5) +
   geom_smooth(method = 'lm', formula = y ~ poly(x,2), aes(colour = Group), size=1)
 
-ggline(NTUAC.final.Switching, x = "trainning_times_level", y = "ACC", add = "mean_se", color = "Group", facet.by = "Level") +
+ggline(NTUAC.final.Switching, x = "trainning_times_level", y = "ACC", add = c("mean_se","jitter"), color = "Group", facet.by = "Level") +
   labs(x = "training times", y = "ACC", colour = "Group", title = "Switching") + facet_wrap(~ Level, ncol=5) +
   stat_compare_means(aes(group = Group), label = "p.signif", 
                      label.y = 110, size = 5) +

@@ -67,7 +67,8 @@ NTUAC.pre <- read.csv("../ALL_3_4_5±èV3.csv")
 NTUAC.pre <- NTUAC.pre[,-c(6:27)]
 
 NTUAC.pre <- na.omit(NTUAC.pre)
-
+NTUAC.pre <- NTUAC.pre[order(NTUAC.pre[,5]),]
+  
 seq.table <- table(NTUAC.pre$Task, NTUAC.pre$Subj.num)
 
 trainning_times <- c()
@@ -80,7 +81,7 @@ NTUAC.pre$trainning_times <- trainning_times
 NTUAC.pre <- NTUAC.pre[, c("Task", "Level", "sessions", "ACC", "trainning_times", "Subj.num")]
 NTUAC.pre$ACC <- NTUAC.pre$ACC*100
 
-domain.total.sub <- rbind(domain.total.sub, NTUAC.pre)
+domain.total.sub <- rbind.data.frame(domain.total.sub, NTUAC.pre)
 
 write.csv(domain.total.sub, file = "../NTUAC_total_34567.csv")
 levels(domain.total.sub$Subj.num)
